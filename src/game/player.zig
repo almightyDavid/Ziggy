@@ -1,4 +1,5 @@
 const rl = @import("raylib");
+const Projectile = @import("projectile.zig").Projectile;
 
 pub const Player = struct {
     position: rl.Vector2,
@@ -11,8 +12,10 @@ pub const Player = struct {
     },
 
     grounded: bool = false,
-    isAttacking: bool = false,
+    projectiles: [maxProjectiles]Projectile = [_]Projectile{Projectile.empty()} ** maxProjectiles,
+    shootCooldown: f32 = 0.0,
 
+    const maxProjectiles = 8;
     const moveSpeed: f32 = 260.0;
     const gravity: f32 = 1600.0;
     const jumpSpeed: f32 = 600.0;
@@ -25,6 +28,8 @@ pub const Player = struct {
                 .y = 0.0,
             },
             .direction = 1.0,
+            .projectiles = [_]Projectile{Projectile.empty()} ** maxProjectiles,
+            .shootCooldown = 0.0,
         };
     }
 
@@ -56,6 +61,19 @@ pub const Player = struct {
 
         self.moveHorizontal(deltaTime, platforms);
         self.moveVertical(deltaTime, platforms);
+
+        if (self.shootCooldown > 0.0) {
+            self.shootCooldown -= deltaTime;
+        }
+
+        if (rl.isKeyPressed(.k) and self.shootCooldown <= 0.0) {
+            self.shoot();
+            self.shootCooldown = 0.25;
+        }
+
+        for (&self.projectiles) |*projectile| {
+            projectile.update(deltaTime);
+        }
     }
 
     fn handleInput(self: *Player, platforms: []const rl.Rectangle) void {
@@ -88,21 +106,19 @@ pub const Player = struct {
         if (rl.isKeyPressed(.j)) {
             self.teleport(platforms);
         }
-
-        self.isAttacking = rl.isKeyPressed(.k);
     }
 
-    pub fn getAttackRectangle(self: Player) rl.Rectangle {
-        var attackRect: rl.Rectangle = .{ .x = self.position.x + self.size.x, .y = self.position.y, .width = 200, .height = self.size.y };
-        if (self.direction < 0.0) {
-            attackRect.x = self.position.x - attackRect.width;
+    fn shoot(self: *Player) void {
+        for (&self.projectiles) |*projectile| {
+            if (projectile.active) continue;
+
+            projectile.* = Projectile.spawn(
+                self.getCenter(),
+                self.direction,
+            );
+
+            return;
         }
-        return attackRect;
-    }
-
-    pub fn drawAttack(self: Player) void {
-        const attackRect = self.getAttackRectangle();
-        rl.drawRectangleRec(attackRect, rl.Color.blue);
     }
 
     fn teleport(self: *Player, platforms: []const rl.Rectangle) void {
@@ -218,12 +234,13 @@ pub const Player = struct {
     }
 
     pub fn draw(self: Player) void {
-        if (self.isAttacking) {
-            self.drawAttack();
-        }
         rl.drawRectangleRec(
             self.getRectangle(),
-            rl.Color.red,
+            rl.Color.blue,
         );
+
+        for (self.projectiles) |projectile| {
+            projectile.draw();
+        }
     }
 };

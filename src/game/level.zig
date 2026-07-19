@@ -1,5 +1,7 @@
 const rl = @import("raylib");
-const Enemy = @import("enemy_dummy.zig").Enemy;
+const enemies_mod = @import("enemy_ai.zig");
+const GroundEnemy = enemies_mod.GroundEnemy;
+const FlyingEnemy = enemies_mod.FlyingEnemy;
 
 pub const levelWidth: f32 = 10000;
 pub const levelHeight: f32 = 2000;
@@ -306,36 +308,43 @@ pub const platforms = [_]rl.Rectangle{
     },
 };
 
-pub const initalEnemies = [_]Enemy{
-    Enemy{ .position = .{ .x = 6820.0, .y = 500.0 } },
-    Enemy{ .position = .{ .x = 8500.0, .y = 400.0 } },
-    Enemy{ .position = .{ .x = 9000.0, .y = 300.0 } },
-    Enemy{ .position = .{ .x = 800.0, .y = 400.0 } },
+pub const initialGroundEnemies = [_]GroundEnemy{
+    GroundEnemy.init(.{ .x = 500.0, .y = 300.0 }),
+    GroundEnemy.init(.{ .x = 1100.0, .y = 350.0 }),
+    GroundEnemy.init(.{ .x = 8300.0, .y = 380.0 }),
 };
 
-pub var enemies = initalEnemies;
+pub const initialFlyingEnemies = [_]FlyingEnemy{
+    FlyingEnemy.init(.{ .x = 1350.0, .y = 250.0 }),
+    FlyingEnemy.init(.{ .x = 3000.0, .y = 260.0 }),
+};
 
-pub fn checkAttackHits(attackRect: rl.Rectangle) void {
-    for (&enemies) |*enemy| {
-        enemy.checkHitByAttack(attackRect);
-    }
+pub var ground_enemies = initialGroundEnemies;
+pub var flying_enemies = initialFlyingEnemies;
+
+pub fn reset() void {
+    ground_enemies = initialGroundEnemies;
+    flying_enemies = initialFlyingEnemies;
 }
 
-pub fn update(deltaTime: f32) void {
-    for (&enemies) |*enemy| {
-        enemy.update(deltaTime);
+pub fn checkAttackHits(attack_rect: rl.Rectangle) void {
+    for (&ground_enemies) |*enemy| enemy.checkHitByAttack(attack_rect);
+    for (&flying_enemies) |*enemy| enemy.checkHitByAttack(attack_rect);
+}
+
+pub fn update(deltaTime: f32, player_center: rl.Vector2) void {
+    for (&ground_enemies) |*enemy| {
+        enemy.update(deltaTime, platforms[0..], player_center);
+    }
+    for (&flying_enemies) |*enemy| {
+        enemy.update(deltaTime, player_center);
     }
 }
 
 pub fn draw() void {
     for (platforms) |platform| {
-        rl.drawRectangleRec(
-            platform,
-            rl.Color.dark_gray,
-        );
+        rl.drawRectangleRec(platform, rl.Color.dark_gray);
     }
-
-    for (enemies) |enemy| {
-        enemy.draw();
-    }
+    for (ground_enemies) |enemy| enemy.draw();
+    for (flying_enemies) |enemy| enemy.draw();
 }

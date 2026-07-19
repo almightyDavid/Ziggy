@@ -35,11 +35,7 @@ pub const Game = struct {
             level.platforms[0..],
         );
 
-        level.update(deltaTime);
-
-        if (self.player.isAttacking) {
-            level.checkAttackHits(self.player.getAttackRectangle());
-        }
+        level.update(deltaTime, self.player.getCenter());
 
         if (self.player.position.y > 1600.0) {
             self.reset();
@@ -55,10 +51,6 @@ pub const Game = struct {
         level.draw();
         self.player.draw();
 
-        if (self.player.isAttacking) {
-            self.player.drawAttack();
-        }
-
         rl.drawText(
             "A/D: Move   Space: Jump   J: Teleport",
             20,
@@ -73,5 +65,6 @@ pub const Game = struct {
             .x = 80.0,
             .y = 400.0,
         });
+        level.reset();
     }
 };
