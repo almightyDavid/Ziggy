@@ -1,5 +1,6 @@
 const rl = @import("raylib");
 const enemies_mod = @import("enemy_ai.zig");
+const Projectile = @import("projectile.zig").Projectile;
 const GroundEnemy = enemies_mod.GroundEnemy;
 const FlyingEnemy = enemies_mod.FlyingEnemy;
 
@@ -319,25 +320,81 @@ pub const initialFlyingEnemies = [_]FlyingEnemy{
     FlyingEnemy.init(.{ .x = 3000.0, .y = 260.0 }),
 };
 
-pub var ground_enemies = initialGroundEnemies;
-pub var flying_enemies = initialFlyingEnemies;
+pub var groundEnemies = initialGroundEnemies;
+pub var flyingEnemies = initialFlyingEnemies;
 
 pub fn reset() void {
-    ground_enemies = initialGroundEnemies;
-    flying_enemies = initialFlyingEnemies;
+    groundEnemies = initialGroundEnemies;
+    flyingEnemies = initialFlyingEnemies;
 }
 
-pub fn checkAttackHits(attack_rect: rl.Rectangle) void {
-    for (&ground_enemies) |*enemy| enemy.checkHitByAttack(attack_rect);
-    for (&flying_enemies) |*enemy| enemy.checkHitByAttack(attack_rect);
-}
+fn hitEnemyGroup(projectile: *Projectile, enemies: anytype) bool {
+    const projectileRect = projectile.getRectangle();
 
-pub fn update(deltaTime: f32, player_center: rl.Vector2) void {
-    for (&ground_enemies) |*enemy| {
-        enemy.update(deltaTime, platforms[0..], player_center);
+    for (enemies) |*enemy| {
+        if (!enemy.alive) continue;
+
+        const collided = rl.checkCollisionRecs(
+            projectileRect,
+            enemy.getRectangle(),
+        );
+
+        if (!collided) continue;
+
+        enemy.hit(projectile.damage);
+        projectile.deactivate();
+
+        return true;
     }
-    for (&flying_enemies) |*enemy| {
-        enemy.update(deltaTime, player_center);
+
+    return false;
+}
+
+pub fn resolveProjectileCollision(projectile: *Projectile) void {
+    if (!projectile.active) return;
+
+    const projectileRect = projectile.getRectangle();
+
+    const outside_level =
+        projectileRect.x + projectileRect.width < 0.0 or
+        projectileRect.x > levelWidth or
+        projectileRect.y + projectileRect.height < 0.0 or
+        projectileRect.y > levelHeight;
+
+    if (outside_level) {
+        projectile.deactivate();
+        return;
+    }
+
+    for (platforms) |platform| {
+        if (rl.checkCollisionRecs(
+            projectileRect,
+            platform,
+        )) {
+            projectile.deactivate();
+            return;
+        }
+    }
+
+    if (hitEnemyGroup(
+        projectile,
+        ground_enemies[0..],
+    )) {
+        return;
+    }
+
+    _ = hitEnemyGroup(
+        projectile,
+        flying_enemies[0..],
+    );
+}
+
+pub fn update(deltaTime: f32, playerCenter: rl.Vector2) void {
+    for (&groundEnemies) |*enemy| {
+        enemy.update(deltaTime, platforms[0..], playerCenter);
+    }
+    for (&flyingEnemies) |*enemy| {
+        enemy.update(deltaTime, playerCenter);
     }
 }
 
@@ -345,6 +402,6 @@ pub fn draw() void {
     for (platforms) |platform| {
         rl.drawRectangleRec(platform, rl.Color.dark_gray);
     }
-    for (ground_enemies) |enemy| enemy.draw();
-    for (flying_enemies) |enemy| enemy.draw();
+    for (groundEnemies) |enemy| enemy.draw();
+    for (flyingEnemies) |enemy| enemy.draw();
 }

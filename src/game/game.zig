@@ -37,6 +37,10 @@ pub const Game = struct {
 
         level.update(deltaTime, self.player.getCenter());
 
+        for (self.player.projectilesSlice()) |*projectile| {
+            level.resolveProjectileCollision(projectile);
+        }
+
         if (self.player.position.y > 1600.0) {
             self.reset();
         }

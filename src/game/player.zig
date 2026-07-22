@@ -49,6 +49,10 @@ pub const Player = struct {
         };
     }
 
+    pub fn projectilesSlice(self: *Player) []Projectile {
+        return self.projectiles[0..];
+    }
+
     pub fn update(
         self: *Player,
         deltaTime: f32,
@@ -166,7 +170,6 @@ pub const Player = struct {
         self.velocity.x = 0.0;
 
         if (collided) {
-            // Optional. Usually good after teleport correction.
             self.velocity.y = 0.0;
         }
 

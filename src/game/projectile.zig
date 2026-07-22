@@ -4,6 +4,7 @@ pub const Projectile = struct {
     position: rl.Vector2,
     velocity: rl.Vector2,
     active: bool = false,
+    damage: i32 = 1,
 
     size: rl.Vector2 = .{
         .x = 16.0,
@@ -11,17 +12,10 @@ pub const Projectile = struct {
     },
 
     pub fn empty() Projectile {
-        return .{
-            .position = .{ .x = 0.0, .y = 0.0 },
-            .velocity = .{ .x = 0.0, .y = 0.0 },
-            .active = false,
-        };
+        return .{ .position = .{ .x = 0.0, .y = 0.0 }, .velocity = .{ .x = 0.0, .y = 0.0 }, .active = false, .damage = 1 };
     }
 
-    pub fn spawn(
-        position: rl.Vector2,
-        direction: f32,
-    ) Projectile {
+    pub fn spawn(position: rl.Vector2, direction: f32) Projectile {
         return .{
             .position = position,
             .velocity = .{
@@ -29,6 +23,7 @@ pub const Projectile = struct {
                 .y = 0.0,
             },
             .active = true,
+            .damage = 1,
         };
     }
 
@@ -37,6 +32,14 @@ pub const Projectile = struct {
 
         self.position.x += self.velocity.x * deltaTime;
         self.position.y += self.velocity.y * deltaTime;
+    }
+
+    pub fn deactivate(self: *Projectile) void {
+        self.active = false;
+        self.velocity = .{
+            .x = 0.0,
+            .y = 0.0,
+        };
     }
 
     pub fn getRectangle(self: Projectile) rl.Rectangle {
