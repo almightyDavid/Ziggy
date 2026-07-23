@@ -33,7 +33,7 @@ pub const Player = struct {
         };
     }
 
-    pub fn getRectangle(self: Player) rl.Rectangle {
+    pub fn getCollider(self: Player) rl.Rectangle {
         return .{
             .x = self.position.x,
             .y = self.position.y,
@@ -185,7 +185,7 @@ pub const Player = struct {
 
         for (platforms) |platform| {
             if (!rl.checkCollisionRecs(
-                self.getRectangle(),
+                self.getCollider(),
                 platform,
             )) {
                 continue;
@@ -215,7 +215,7 @@ pub const Player = struct {
 
         for (platforms) |platform| {
             if (!rl.checkCollisionRecs(
-                self.getRectangle(),
+                self.getCollider(),
                 platform,
             )) {
                 continue;
@@ -238,7 +238,7 @@ pub const Player = struct {
 
     pub fn draw(self: Player) void {
         rl.drawRectangleRec(
-            self.getRectangle(),
+            self.getCollider(),
             rl.Color.blue,
         );
 

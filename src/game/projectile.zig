@@ -1,4 +1,5 @@
 const rl = @import("raylib");
+const Collider = @import("collision.zig").Collider;
 
 pub const Projectile = struct {
     position: rl.Vector2,
@@ -51,11 +52,28 @@ pub const Projectile = struct {
         };
     }
 
+    pub fn getCollider(self: Projectile) Collider {
+        return .{ .rect = .{
+            .x = self.position.x,
+            .y = self.position.y,
+            .width = self.size.x,
+            .height = self.size.y,
+        } };
+    }
+
+    // TODO: make work universally, or stay with rect forever
     pub fn draw(self: Projectile) void {
         if (!self.active) return;
 
+        const rect = rl.Rectangle{
+            .x = self.position.x,
+            .y = self.position.y,
+            .width = self.size.x,
+            .height = self.size.y,
+        };
+
         rl.drawRectangleRec(
-            self.getRectangle(),
+            rect,
             rl.Color.yellow,
         );
     }

@@ -329,17 +329,12 @@ pub fn reset() void {
 }
 
 fn hitEnemyGroup(projectile: *Projectile, enemies: anytype) bool {
-    const projectileRect = projectile.getRectangle();
-
     for (enemies) |*enemy| {
         if (!enemy.alive) continue;
 
-        const collided = rl.checkCollisionRecs(
-            projectileRect,
-            enemy.getRectangle(),
-        );
-
-        if (!collided) continue;
+        if (!projectile.getCollider().intersects(enemy.getCollider())) {
+            continue;
+        }
 
         enemy.hit(projectile.damage);
         projectile.deactivate();
@@ -353,40 +348,31 @@ fn hitEnemyGroup(projectile: *Projectile, enemies: anytype) bool {
 pub fn resolveProjectileCollision(projectile: *Projectile) void {
     if (!projectile.active) return;
 
-    const projectileRect = projectile.getRectangle();
-
-    const outside_level =
-        projectileRect.x + projectileRect.width < 0.0 or
-        projectileRect.x > levelWidth or
-        projectileRect.y + projectileRect.height < 0.0 or
-        projectileRect.y > levelHeight;
-
-    if (outside_level) {
-        projectile.deactivate();
-        return;
-    }
-
-    for (platforms) |platform| {
-        if (rl.checkCollisionRecs(
-            projectileRect,
-            platform,
-        )) {
-            projectile.deactivate();
-            return;
-        }
-    }
-
     if (hitEnemyGroup(
         projectile,
-        ground_enemies[0..],
+        groundEnemies[0..],
     )) {
         return;
     }
 
-    _ = hitEnemyGroup(
+    if (hitEnemyGroup(
         projectile,
-        flying_enemies[0..],
-    );
+        flyingEnemies[0..],
+    )) {
+        return;
+    }
+
+    // Platforms block projectiles.
+    for (platforms) |platform| {
+        if (!projectile.getCollider().intersects(
+            .{ .rect = platform },
+        )) {
+            continue;
+        }
+
+        projectile.deactivate();
+        return;
+    }
 }
 
 pub fn update(deltaTime: f32, playerCenter: rl.Vector2) void {

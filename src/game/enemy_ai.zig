@@ -1,5 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
+const Collider = @import("collision.zig").Collider;
 
 pub const GroundEnemy = struct {
     position: rl.Vector2,
@@ -135,8 +136,17 @@ pub const GroundEnemy = struct {
     ) void {
         self.position.x += self.velocity.x * deltaTime;
 
+        // TODO: make universal movement.zig so the level doesnt care what shape it is
+        // this rect is garbage but it will hold for now
         for (platforms) |platform| {
-            if (!rl.checkCollisionRecs(self.getRectangle(), platform)) continue;
+            const rect = rl.Rectangle{
+                .x = self.position.x,
+                .y = self.position.y,
+                .width = self.size.x,
+                .height = self.size.y,
+            };
+
+            if (!rl.checkCollisionRecs(rect, platform)) continue;
 
             if (self.velocity.x > 0.0) {
                 self.position.x = platform.x - self.size.x;
@@ -155,8 +165,17 @@ pub const GroundEnemy = struct {
         self.position.y += self.velocity.y * deltaTime;
         self.grounded = false;
 
+        // TODO: make universal movement.zig so the level doesnt care what shape it is and what enemy
+        // this rect is garbage but it will hold for now
         for (platforms) |platform| {
-            if (!rl.checkCollisionRecs(self.getRectangle(), platform)) continue;
+            const rect = rl.Rectangle{
+                .x = self.position.x,
+                .y = self.position.y,
+                .width = self.size.x,
+                .height = self.size.y,
+            };
+
+            if (!rl.checkCollisionRecs(rect, platform)) continue;
 
             if (self.velocity.y > 0.0) {
                 self.position.y = platform.y - self.size.y;
@@ -169,15 +188,16 @@ pub const GroundEnemy = struct {
         }
     }
 
-    pub fn getRectangle(self: GroundEnemy) rl.Rectangle {
-        return .{
+    pub fn getCollider(self: GroundEnemy) Collider {
+        return .{ .rect = .{
             .x = self.position.x,
             .y = self.position.y,
             .width = self.size.x,
             .height = self.size.y,
-        };
+        } };
     }
 
+    // TODO: make it work for Collider
     pub fn getCenter(self: GroundEnemy) rl.Vector2 {
         return .{
             .x = self.position.x + self.size.x * 0.5,
@@ -194,15 +214,17 @@ pub const GroundEnemy = struct {
         }
     }
 
-    pub fn checkHitByProjectile(self: *GroundEnemy, attack_rect: rl.Rectangle) void {
-        if (self.alive and rl.checkCollisionRecs(self.getRectangle(), attack_rect)) {
-            self.hit(1);
-        }
-    }
-
+    // TODO: replace drawRectangleRec
+    // rect is ass
     pub fn draw(self: GroundEnemy) void {
         if (!self.alive) return;
-        rl.drawRectangleRec(self.getRectangle(), rl.Color.maroon);
+        const rect = rl.Rectangle{
+            .x = self.position.x,
+            .y = self.position.y,
+            .width = self.size.x,
+            .height = self.size.y,
+        };
+        rl.drawRectangleRec(rect, rl.Color.maroon);
         drawHealthBar(self.position, self.size.x, self.health, maxHealth);
     }
 };
@@ -267,15 +289,16 @@ pub const FlyingEnemy = struct {
         self.position.y += self.velocity.y * deltaTime;
     }
 
-    pub fn getRectangle(self: FlyingEnemy) rl.Rectangle {
-        return .{
+    pub fn getCollider(self: FlyingEnemy) Collider {
+        return .{ .rect = .{
             .x = self.position.x,
             .y = self.position.y,
             .width = self.size.x,
             .height = self.size.y,
-        };
+        } };
     }
 
+    // TODO: make it work for Collider
     pub fn getCenter(self: FlyingEnemy) rl.Vector2 {
         return .{
             .x = self.position.x + self.size.x * 0.5,
@@ -292,15 +315,15 @@ pub const FlyingEnemy = struct {
         }
     }
 
-    pub fn checkHitByProjectile(self: *FlyingEnemy, attack_rect: rl.Rectangle) void {
-        if (self.alive and rl.checkCollisionRecs(self.getRectangle(), attack_rect)) {
-            self.hit(1);
-        }
-    }
-
     pub fn draw(self: FlyingEnemy) void {
         if (!self.alive) return;
-        rl.drawRectangleRec(self.getRectangle(), rl.Color.purple);
+        const rect = rl.Rectangle{
+            .x = self.position.x,
+            .y = self.position.y,
+            .width = self.size.x,
+            .height = self.size.y,
+        };
+        rl.drawRectangleRec(rect, rl.Color.purple);
         drawHealthBar(self.position, self.size.x, self.health, maxHealth);
     }
 };
