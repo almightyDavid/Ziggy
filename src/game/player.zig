@@ -1,10 +1,13 @@
 const rl = @import("raylib");
 const Projectile = @import("projectile.zig").Projectile;
+const Collider = @import("collision.zig").Collider;
 
 pub const Player = struct {
     position: rl.Vector2,
     velocity: rl.Vector2,
     direction: f32,
+    health: i32,
+    alive: bool,
 
     size: rl.Vector2 = .{
         .x = 40.0,
@@ -14,11 +17,13 @@ pub const Player = struct {
     grounded: bool = false,
     projectiles: [maxProjectiles]Projectile = [_]Projectile{Projectile.empty()} ** maxProjectiles,
     shootCooldown: f32 = 0.0,
+    hitCooldown: f32 = 0.0,
 
     const maxProjectiles = 8;
-    const moveSpeed: f32 = 260.0;
+    const moveSpeed: f32 = 360.0;
     const gravity: f32 = 1600.0;
     const jumpSpeed: f32 = 600.0;
+    const hitCooldownDuration: f32 = 1.0;
 
     pub fn init(position: rl.Vector2) Player {
         return .{
@@ -27,19 +32,31 @@ pub const Player = struct {
                 .x = 0.0,
                 .y = 0.0,
             },
+            .alive = true,
             .direction = 1.0,
+            .health = 3,
             .projectiles = [_]Projectile{Projectile.empty()} ** maxProjectiles,
             .shootCooldown = 0.0,
+            .hitCooldown = 0.0,
         };
     }
 
-    pub fn getCollider(self: Player) rl.Rectangle {
+    pub fn getRectangle(self: Player) rl.Rectangle {
         return .{
             .x = self.position.x,
             .y = self.position.y,
             .width = self.size.x,
             .height = self.size.y,
         };
+    }
+
+    pub fn getCollider(self: Player) Collider {
+        return .{ .rect = .{
+            .x = self.position.x,
+            .y = self.position.y,
+            .width = self.size.x,
+            .height = self.size.y,
+        } };
     }
 
     pub fn getCenter(self: Player) rl.Vector2 {
@@ -60,6 +77,8 @@ pub const Player = struct {
     ) void {
         self.handleInput(platforms);
 
+        self.hitCooldown = @max(0.0, self.hitCooldown - deltaTime);
+
         // Positive Y moves downward in screen coordinates.
         self.velocity.y += gravity * deltaTime;
 
@@ -68,6 +87,10 @@ pub const Player = struct {
 
         if (self.shootCooldown > 0.0) {
             self.shootCooldown -= deltaTime;
+        }
+
+        if (self.hitCooldown > 0.0) {
+            self.hitCooldown -= deltaTime;
         }
 
         if (rl.isKeyPressed(.k) and self.shootCooldown <= 0.0) {
@@ -110,6 +133,19 @@ pub const Player = struct {
         if (rl.isKeyPressed(.j)) {
             self.teleport(platforms);
         }
+    }
+
+    pub fn hit(self: *Player, damage: i32) void {
+        if (!self.alive) return;
+        if (self.hitCooldown > 0.0) return;
+
+        self.health -= damage;
+        self.hitCooldown = hitCooldownDuration;
+        if (self.health <= 0) {
+            self.health = 0;
+            self.alive = false;
+        }
+        // TODO: push player away from damage source requires cords
     }
 
     fn shoot(self: *Player) void {
@@ -185,7 +221,7 @@ pub const Player = struct {
 
         for (platforms) |platform| {
             if (!rl.checkCollisionRecs(
-                self.getCollider(),
+                self.getRectangle(),
                 platform,
             )) {
                 continue;
@@ -215,7 +251,7 @@ pub const Player = struct {
 
         for (platforms) |platform| {
             if (!rl.checkCollisionRecs(
-                self.getCollider(),
+                self.getRectangle(),
                 platform,
             )) {
                 continue;
@@ -238,7 +274,7 @@ pub const Player = struct {
 
     pub fn draw(self: Player) void {
         rl.drawRectangleRec(
-            self.getCollider(),
+            self.getRectangle(),
             rl.Color.blue,
         );
 

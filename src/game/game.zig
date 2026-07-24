@@ -35,7 +35,7 @@ pub const Game = struct {
             level.platforms[0..],
         );
 
-        level.update(deltaTime, self.player.getCenter());
+        level.update(deltaTime, &self.player, self.player.getCenter());
 
         for (self.player.projectilesSlice()) |*projectile| {
             level.resolveProjectileCollision(projectile);
@@ -45,6 +45,10 @@ pub const Game = struct {
             self.reset();
         }
         self.camera.update(&self.player);
+
+        if (!self.player.alive) {
+            self.reset();
+        }
     }
 
     pub fn draw(self: Game) void {

@@ -1,6 +1,7 @@
 const rl = @import("raylib");
 const enemies_mod = @import("enemy_ai.zig");
 const Projectile = @import("projectile.zig").Projectile;
+const Player = @import("player.zig").Player;
 const GroundEnemy = enemies_mod.GroundEnemy;
 const FlyingEnemy = enemies_mod.FlyingEnemy;
 
@@ -328,6 +329,39 @@ pub fn reset() void {
     flyingEnemies = initialFlyingEnemies;
 }
 
+fn damagePlayerFromEnemyGroup(player: *Player, enemies: anytype) bool {
+    for (enemies) |*enemy| {
+        if (!enemy.alive) continue;
+
+        if (!player.getCollider().intersects(enemy.getCollider())) {
+            continue;
+        }
+
+        player.hit(1);
+
+        return true;
+    }
+    return false;
+}
+
+pub fn resolvePlayerEnemyCollisions(player: *Player) void {
+    if (!player.alive) return;
+    if (player.hitCooldown > 0.0) return;
+
+    if (damagePlayerFromEnemyGroup(
+        player,
+        groundEnemies[0..],
+    )) {
+        // no double damage from overlapping enemies
+        return;
+    }
+
+    _ = damagePlayerFromEnemyGroup(
+        player,
+        flyingEnemies[0..],
+    );
+}
+
 fn hitEnemyGroup(projectile: *Projectile, enemies: anytype) bool {
     for (enemies) |*enemy| {
         if (!enemy.alive) continue;
@@ -380,13 +414,14 @@ pub fn resolveProjectileCollision(projectile: *Projectile) void {
     }
 }
 
-pub fn update(deltaTime: f32, playerCenter: rl.Vector2) void {
+pub fn update(deltaTime: f32, player: *Player, playerCenter: rl.Vector2) void {
     for (&groundEnemies) |*enemy| {
         enemy.update(deltaTime, platforms[0..], playerCenter);
     }
     for (&flyingEnemies) |*enemy| {
         enemy.update(deltaTime, playerCenter);
     }
+    resolvePlayerEnemyCollisions(player);
 }
 
 pub fn draw() void {
