@@ -373,6 +373,11 @@ pub fn resolveProjectileCollision(projectile: *Projectile) void {
         projectile.deactivate();
         return;
     }
+
+    if (projectile.isOut(levelWidth)) {
+        projectile.deactivate();
+        return;
+    }
 }
 
 pub fn update(deltaTime: f32, playerCenter: rl.Vector2) void {

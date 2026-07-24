@@ -20,7 +20,7 @@ pub const Projectile = struct {
         return .{
             .position = position,
             .velocity = .{
-                .x = 700.0 * direction,
+                .x = 1000.0 * direction,
                 .y = 0.0,
             },
             .active = true,
@@ -59,6 +59,16 @@ pub const Projectile = struct {
             .width = self.size.x,
             .height = self.size.y,
         } };
+    }
+
+    pub fn isOut(self: Projectile, levelWidth: f32) bool {
+        if (self.position.x < 0.0) {
+            return true;
+        }
+        if (self.position.x > levelWidth) {
+            return true;
+        }
+        return false;
     }
 
     // TODO: make work universally, or stay with rect forever

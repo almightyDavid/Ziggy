@@ -72,7 +72,7 @@ pub const Player = struct {
 
         if (rl.isKeyPressed(.k) and self.shootCooldown <= 0.0) {
             self.shoot();
-            self.shootCooldown = 0.25;
+            self.shootCooldown = 0.1;
         }
 
         for (&self.projectiles) |*projectile| {
