@@ -54,10 +54,11 @@ pub const Game = struct {
     pub fn draw(self: Game) void {
         rl.clearBackground(rl.Color.sky_blue);
         rl.beginMode2D(self.camera.camera);
-        defer rl.endMode2D();
 
         level.draw();
         self.player.draw();
+
+        rl.endMode2D();
 
         rl.drawText(
             "A/D: Move   Space: Jump   J: Teleport",
