@@ -94,10 +94,6 @@ pub const Player = struct {
             self.velocity.x = moveToward(self.velocity.x, 0.0, knockbackFriction * deltaTime);
         } else {
             self.handleInput(deltaTime, platforms);
-
-            if (self.grounded and rl.isKeyPressed(.w)) {
-                self.handleInput(deltaTime, platforms);
-            }
         }
 
         // Positive Y moves downward in screen coordinates.
@@ -108,10 +104,6 @@ pub const Player = struct {
 
         if (self.shootCooldown > 0.0) {
             self.shootCooldown -= deltaTime;
-        }
-
-        if (self.hitCooldown > 0.0) {
-            self.hitCooldown -= deltaTime;
         }
 
         if (rl.isKeyPressed(.k) and self.shootCooldown <= 0.0) {
