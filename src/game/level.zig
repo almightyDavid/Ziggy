@@ -337,7 +337,7 @@ fn damagePlayerFromEnemyGroup(player: *Player, enemies: anytype) bool {
             continue;
         }
 
-        player.hit(1);
+        player.hit(1, enemy.getCenter().x);
 
         return true;
     }

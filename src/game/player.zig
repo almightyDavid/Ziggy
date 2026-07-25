@@ -18,12 +18,19 @@ pub const Player = struct {
     projectiles: [maxProjectiles]Projectile = [_]Projectile{Projectile.empty()} ** maxProjectiles,
     shootCooldown: f32 = 0.0,
     hitCooldown: f32 = 0.0,
+    knockbackTimer: f32 = 0.0,
 
     const maxProjectiles = 8;
     const moveSpeed: f32 = 360.0;
     const gravity: f32 = 1600.0;
     const jumpSpeed: f32 = 600.0;
+
+    // TODO: add acceleration
     const hitCooldownDuration: f32 = 1.0;
+    const knockbackDuration: f32 = 0.2;
+    const knockbackSpeed: f32 = 500.0;
+    const knockbackJumpSpeed: f32 = 500;
+    const knockbackFriction: f32 = 900.0;
 
     pub fn init(position: rl.Vector2) Player {
         return .{
@@ -38,6 +45,7 @@ pub const Player = struct {
             .projectiles = [_]Projectile{Projectile.empty()} ** maxProjectiles,
             .shootCooldown = 0.0,
             .hitCooldown = 0.0,
+            .knockbackTimer = 0.0,
         };
     }
 
@@ -75,9 +83,20 @@ pub const Player = struct {
         deltaTime: f32,
         platforms: []const rl.Rectangle,
     ) void {
-        self.handleInput(platforms);
-
         self.hitCooldown = @max(0.0, self.hitCooldown - deltaTime);
+
+        const inputLocked = self.knockbackTimer > 0.0;
+
+        if (inputLocked) {
+            self.knockbackTimer = @max(0.0, self.knockbackTimer - deltaTime);
+            self.velocity.x = moveToward(self.velocity.x, 0.0, knockbackFriction * deltaTime);
+        } else {
+            self.handleInput(deltaTime, platforms);
+
+            if (self.grounded and rl.isKeyPressed(.w)) {
+                self.handleInput(deltaTime, platforms);
+            }
+        }
 
         // Positive Y moves downward in screen coordinates.
         self.velocity.y += gravity * deltaTime;
@@ -103,7 +122,7 @@ pub const Player = struct {
         }
     }
 
-    fn handleInput(self: *Player, platforms: []const rl.Rectangle) void {
+    fn handleInput(self: *Player, deltaTime: f32, platforms: []const rl.Rectangle) void {
         var moveDir: f32 = 0.0;
 
         if (rl.isKeyDown(.a) or rl.isKeyDown(.left)) {
@@ -114,10 +133,12 @@ pub const Player = struct {
             moveDir += 1.0;
         }
 
-        self.velocity.x = moveDir * moveSpeed;
-
         if (moveDir != 0.0) {
+            self.velocity.x = moveDir * moveSpeed;
             self.direction = moveDir;
+        } else {
+            const friction: f32 = if (self.grounded) 2500.0 else 400.0;
+            self.velocity.x = moveToward(self.velocity.x, 0.0, friction * deltaTime);
         }
 
         const jumpPressed =
@@ -135,17 +156,37 @@ pub const Player = struct {
         }
     }
 
-    pub fn hit(self: *Player, damage: i32) void {
+    pub fn hit(self: *Player, damage: i32, sourceX: f32) void {
         if (!self.alive) return;
         if (self.hitCooldown > 0.0) return;
 
         self.health -= damage;
         self.hitCooldown = hitCooldownDuration;
+        self.knockbackTimer = knockbackDuration;
+
+        const direction: f32 = if (self.getCenter().x < sourceX) -1.0 else 1.0;
+
+        self.velocity.x = direction * knockbackSpeed;
+        self.velocity.y = -knockbackJumpSpeed;
+
+        self.grounded = false;
+
         if (self.health <= 0) {
             self.health = 0;
             self.alive = false;
         }
-        // TODO: push player away from damage source requires cords
+    }
+
+    fn moveToward(value: f32, target: f32, amount: f32) f32 {
+        if (value < target) {
+            return @min(value + amount, target);
+        }
+
+        if (value > target) {
+            return @max(value - amount, target);
+        }
+
+        return target;
     }
 
     fn shoot(self: *Player) void {
@@ -272,6 +313,7 @@ pub const Player = struct {
         }
     }
 
+    // TODO: add alpha flicker indication
     pub fn draw(self: Player) void {
         rl.drawRectangleRec(
             self.getRectangle(),
