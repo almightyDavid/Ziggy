@@ -414,7 +414,8 @@ pub fn resolveProjectileCollision(projectile: *Projectile) void {
     }
 }
 
-pub fn update(deltaTime: f32, player: *Player, playerCenter: rl.Vector2) void {
+pub fn update(deltaTime: f32, player: *Player) void {
+    const playerCenter = player.getCenter();
     for (&groundEnemies) |*enemy| {
         enemy.update(deltaTime, platforms[0..], playerCenter);
     }

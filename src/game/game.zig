@@ -35,7 +35,7 @@ pub const Game = struct {
             level.platforms[0..],
         );
 
-        level.update(deltaTime, &self.player, self.player.getCenter());
+        level.update(deltaTime, &self.player);
 
         for (self.player.projectilesSlice()) |*projectile| {
             level.resolveProjectileCollision(projectile);
