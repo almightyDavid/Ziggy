@@ -32,6 +32,8 @@ pub const Player = struct {
     const knockbackJumpSpeed: f32 = 500;
     const knockbackFriction: f32 = 900.0;
 
+    const flickerIntervall: f32 = 0.1;
+
     pub fn init(position: rl.Vector2) Player {
         return .{
             .position = position,
@@ -313,15 +315,31 @@ pub const Player = struct {
         }
     }
 
-    // TODO: add alpha flicker indication
     pub fn draw(self: Player) void {
+        const flicker = self.getDrawFlicker();
+
         rl.drawRectangleRec(
             self.getRectangle(),
-            rl.Color.blue,
+            flicker,
         );
 
         for (self.projectiles) |projectile| {
             projectile.draw();
         }
+    }
+
+    fn getDrawFlicker(self: Player) rl.Color {
+        var flickerColor = rl.Color.blue;
+
+        if (self.hitCooldown <= 0.0) {
+            return flickerColor;
+        }
+
+        const elapsed = hitCooldownDuration - self.hitCooldown;
+        const flickerPhase: u32 = @intFromFloat(elapsed / flickerIntervall);
+
+        flickerColor.a = if (flickerPhase % 2 == 0) 50 else 255;
+
+        return flickerColor;
     }
 };
