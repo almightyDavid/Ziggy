@@ -70,6 +70,18 @@ pub const Game = struct {
             20,
             rl.Color.black,
         );
+
+        drawHealth(self);
+    }
+
+    pub fn drawHealth(self: *const Game) void {
+        const posX: i32 = 20;
+        const posY = SCREEN_HEIGHT - 40;
+        const spacing = 40;
+        var i: i32 = 0;
+        while (i < self.player.health) : (i += 1) {
+            rl.drawText("X", posX + i * spacing, posY, 40, rl.Color.red);
+        }
     }
 
     pub fn reset(self: *Game) void {
