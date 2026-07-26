@@ -215,16 +215,24 @@ pub const GroundEnemy = struct {
     }
 
     // TODO: replace drawRectangleRec
-    // rect is ass
-    pub fn draw(self: GroundEnemy) void {
+    pub fn draw(self: GroundEnemy, texture: rl.Texture2D) void {
         if (!self.alive) return;
-        const rect = rl.Rectangle{
+
+        const source = rl.Rectangle{
+            .x = 0.0,
+            .y = 0.0,
+            .width = @floatFromInt(texture.width),
+            .height = @floatFromInt(texture.height),
+        };
+
+        const destination = rl.Rectangle{
             .x = self.position.x,
             .y = self.position.y,
             .width = self.size.x,
             .height = self.size.y,
         };
-        rl.drawRectangleRec(rect, rl.Color.maroon);
+
+        rl.drawTexturePro(texture, source, destination, .{ .x = 0.0, .y = 0.0 }, 0.0, rl.Color.white);
         drawHealthBar(self.position, self.size.x, self.health, maxHealth);
     }
 };
@@ -315,15 +323,24 @@ pub const FlyingEnemy = struct {
         }
     }
 
-    pub fn draw(self: FlyingEnemy) void {
+    pub fn draw(self: FlyingEnemy, texture: rl.Texture2D) void {
         if (!self.alive) return;
-        const rect = rl.Rectangle{
+
+        const source = rl.Rectangle{
+            .x = 0.0,
+            .y = 0.0,
+            .width = @floatFromInt(texture.width),
+            .height = @floatFromInt(texture.height),
+        };
+
+        const destination = rl.Rectangle{
             .x = self.position.x,
             .y = self.position.y,
             .width = self.size.x,
             .height = self.size.y,
         };
-        rl.drawRectangleRec(rect, rl.Color.purple);
+
+        rl.drawTexturePro(texture, source, destination, .{ .x = 0.0, .y = 0.0 }, 0.0, rl.Color.white);
         drawHealthBar(self.position, self.size.x, self.health, maxHealth);
     }
 };

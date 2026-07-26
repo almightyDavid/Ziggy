@@ -37,7 +37,7 @@ pub fn main() !void {
     // ---
     //audio.playMusic(.menu);
 
-    var platformer = Platformer.init();
+    var platformer = try Platformer.init();
     while (!rl.windowShouldClose()) {
         if (rl.isKeyPressed(.f11)) {
             rl.toggleBorderlessWindowed();

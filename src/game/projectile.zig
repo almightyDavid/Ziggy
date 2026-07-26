@@ -72,19 +72,23 @@ pub const Projectile = struct {
     }
 
     // TODO: make work universally, or stay with rect forever
-    pub fn draw(self: Projectile) void {
+    pub fn draw(self: Projectile, texture: rl.Texture2D) void {
         if (!self.active) return;
 
-        const rect = rl.Rectangle{
+        const source = rl.Rectangle{
+            .x = 0.0,
+            .y = 0.0,
+            .width = @floatFromInt(texture.width),
+            .height = @floatFromInt(texture.height),
+        };
+
+        const destination = rl.Rectangle{
             .x = self.position.x,
             .y = self.position.y,
             .width = self.size.x,
             .height = self.size.y,
         };
 
-        rl.drawRectangleRec(
-            rect,
-            rl.Color.yellow,
-        );
+        rl.drawTexturePro(texture, source, destination, .{ .x = 0.0, .y = 0.0 }, 0.0, rl.Color.white);
     }
 };

@@ -1,6 +1,7 @@
 const rl = @import("raylib");
 const Projectile = @import("projectile.zig").Projectile;
 const Collider = @import("collision.zig").Collider;
+const Assets = @import("../assets.zig").Assets;
 
 pub const Player = struct {
     position: rl.Vector2,
@@ -307,21 +308,32 @@ pub const Player = struct {
         }
     }
 
-    pub fn draw(self: Player) void {
+    pub fn draw(self: Player, assets: *const Assets) void {
         const flicker = self.getDrawFlicker();
 
-        rl.drawRectangleRec(
-            self.getRectangle(),
-            flicker,
-        );
+        const source = rl.Rectangle{
+            .x = 0.0,
+            .y = 0.0,
+            .width = @floatFromInt(assets.player.width),
+            .height = @floatFromInt(assets.player.height),
+        };
+
+        const destination = rl.Rectangle{
+            .x = self.position.x,
+            .y = self.position.y,
+            .width = self.size.x,
+            .height = self.size.y,
+        };
+
+        rl.drawTexturePro(assets.player, source, destination, .{ .x = 0.0, .y = 0.0 }, 0.0, flicker);
 
         for (self.projectiles) |projectile| {
-            projectile.draw();
+            projectile.draw(assets.projectile);
         }
     }
 
     fn getDrawFlicker(self: Player) rl.Color {
-        var flickerColor = rl.Color.blue;
+        var flickerColor = rl.Color.white;
 
         if (self.hitCooldown <= 0.0) {
             return flickerColor;
@@ -330,7 +342,7 @@ pub const Player = struct {
         const elapsed = hitCooldownDuration - self.hitCooldown;
         const flickerPhase: u32 = @intFromFloat(elapsed / flickerIntervall);
 
-        flickerColor.a = if (flickerPhase % 2 == 0) 50 else 255;
+        flickerColor.a = if (flickerPhase % 2 == 0) 70 else 255;
 
         return flickerColor;
     }

@@ -4,6 +4,7 @@ const Player = @import("player.zig").Player;
 const Camera = @import("camera.zig").Camera;
 
 const level = @import("level.zig");
+const Assets = @import("../assets.zig").Assets;
 
 const SCREEN_WIDTH = @import("../app_definitions.zig").WIDTH;
 const SCREEN_HEIGHT = @import("../app_definitions.zig").HEIGHT;
@@ -11,8 +12,9 @@ const SCREEN_HEIGHT = @import("../app_definitions.zig").HEIGHT;
 pub const Game = struct {
     player: Player,
     camera: Camera,
+    assets: Assets,
 
-    pub fn init() Game {
+    pub fn init() !Game {
         var player = Player.init(.{ .x = 80.0, .y = 400.0 });
         var camera = Camera.init(SCREEN_WIDTH, SCREEN_HEIGHT, level.levelWidth, level.levelHeight, &player);
 
@@ -21,6 +23,7 @@ pub const Game = struct {
         return .{
             .player = player,
             .camera = camera,
+            .assets = try Assets.load(),
         };
     }
 
@@ -51,12 +54,12 @@ pub const Game = struct {
         }
     }
 
-    pub fn draw(self: Game) void {
+    pub fn draw(self: *const Game) void {
         rl.clearBackground(rl.Color.sky_blue);
         rl.beginMode2D(self.camera.camera);
 
-        level.draw();
-        self.player.draw();
+        level.draw(&self.assets);
+        self.player.draw(&self.assets);
 
         rl.endMode2D();
 

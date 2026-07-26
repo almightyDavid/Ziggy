@@ -4,6 +4,7 @@ const Projectile = @import("projectile.zig").Projectile;
 const Player = @import("player.zig").Player;
 const GroundEnemy = enemies_mod.GroundEnemy;
 const FlyingEnemy = enemies_mod.FlyingEnemy;
+const Assets = @import("../assets.zig").Assets;
 
 pub const levelWidth: f32 = 10000;
 pub const levelHeight: f32 = 2000;
@@ -425,10 +426,10 @@ pub fn update(deltaTime: f32, player: *Player) void {
     resolvePlayerEnemyCollisions(player);
 }
 
-pub fn draw() void {
+pub fn draw(assets: *const Assets) void {
     for (platforms) |platform| {
         rl.drawRectangleRec(platform, rl.Color.dark_gray);
     }
-    for (groundEnemies) |enemy| enemy.draw();
-    for (flyingEnemies) |enemy| enemy.draw();
+    for (groundEnemies) |enemy| enemy.draw(assets.ground_enemy);
+    for (flyingEnemies) |enemy| enemy.draw(assets.flying_enemy);
 }
