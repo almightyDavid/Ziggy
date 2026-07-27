@@ -11,8 +11,8 @@ pub const Player = struct {
     alive: bool,
 
     size: rl.Vector2 = .{
-        .x = 40.0,
-        .y = 56.0,
+        .x = 32.0,
+        .y = 64.0,
     },
 
     grounded: bool = false,
@@ -324,7 +324,7 @@ pub const Player = struct {
         };
 
         const destination = rl.Rectangle{
-            .x = self.position.x - (spriteSize.x - self.size.x) * 0.5,
+            .x = self.position.x - spriteSize.x / 4,
             .y = self.position.y + self.size.y - spriteSize.y,
             .width = spriteSize.x,
             .height = spriteSize.y,
