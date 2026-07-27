@@ -318,11 +318,16 @@ pub const Player = struct {
             .height = @floatFromInt(assets.player.height),
         };
 
+        const spriteSize = rl.Vector2{
+            .x = 64.0,
+            .y = 64.0,
+        };
+
         const destination = rl.Rectangle{
-            .x = self.position.x,
-            .y = self.position.y,
-            .width = self.size.x,
-            .height = self.size.y,
+            .x = self.position.x - (spriteSize.x - self.size.x) * 0.5,
+            .y = self.position.y + self.size.y - spriteSize.y,
+            .width = spriteSize.x,
+            .height = spriteSize.y,
         };
 
         rl.drawTexturePro(assets.player, source, destination, .{ .x = 0.0, .y = 0.0 }, 0.0, flicker);
