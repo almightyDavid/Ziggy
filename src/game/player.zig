@@ -26,8 +26,10 @@ pub const Player = struct {
     const gravity: f32 = 1600.0;
     const jumpSpeed: f32 = 600.0;
 
-    const startAcceleration: f32 = 3000.0;
-    const endAcceleration: f32 = 5000.0;
+    const acceleration: f32 = 3000.0;
+    const deceleration: f32 = 5000.0;
+    const turnAcceleration: f32 = 7200.0;
+
     const hitCooldownDuration: f32 = 1.0;
     const knockbackDuration: f32 = 0.2;
     const knockbackSpeed: f32 = 500.0;
@@ -135,9 +137,12 @@ pub const Player = struct {
 
         const targetVelocityX = moveDir * moveSpeed;
 
-        const acceleration: f32 = if (moveDir == 0.0) endAcceleration else startAcceleration;
+        // safe?
+        const reversing = moveDir != 0.0 and self.velocity.x * moveDir < 0.0;
 
-        self.velocity.x = moveToward(self.velocity.x, targetVelocityX, acceleration * deltaTime);
+        const movement: f32 = if (moveDir == 0.0) deceleration else if (reversing) turnAcceleration else acceleration;
+
+        self.velocity.x = moveToward(self.velocity.x, targetVelocityX, movement * deltaTime);
 
         const jumpPressed =
             rl.isKeyPressed(.space) or
