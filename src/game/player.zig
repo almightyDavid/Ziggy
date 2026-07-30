@@ -319,11 +319,16 @@ pub const Player = struct {
     pub fn draw(self: Player, assets: *const Assets) void {
         const flicker = self.getDrawFlicker();
 
+        const direction: f32 = if (self.direction < 0.0) -1.0 else 1.0;
+
+        const textureWidth: f32 = @floatFromInt(assets.player.width);
+        const textureHeight: f32 = @floatFromInt(assets.player.height);
+
         const source = rl.Rectangle{
             .x = 0.0,
             .y = 0.0,
-            .width = @floatFromInt(assets.player.width),
-            .height = @floatFromInt(assets.player.height),
+            .width = textureWidth * direction,
+            .height = textureHeight,
         };
 
         const spriteSize = rl.Vector2{
@@ -332,7 +337,7 @@ pub const Player = struct {
         };
 
         const destination = rl.Rectangle{
-            .x = self.position.x - spriteSize.x / 4,
+            .x = self.position.x - spriteSize.x / 5,
             .y = self.position.y + self.size.y - spriteSize.y,
             .width = spriteSize.x,
             .height = spriteSize.y,
