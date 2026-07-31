@@ -35,6 +35,7 @@ pub const Player = struct {
     const knockbackSpeed: f32 = 500.0;
     const knockbackJumpSpeed: f32 = 500;
     const knockbackFriction: f32 = 900.0;
+    const jumpCutMultiplier: f32 = 0.45;
 
     const flickerIntervall: f32 = 0.1;
 
@@ -152,6 +153,15 @@ pub const Player = struct {
         if (jumpPressed and self.grounded) {
             self.velocity.y = -jumpSpeed;
             self.grounded = false;
+        }
+
+        const jumpReleased =
+            rl.isKeyReleased(.space) or
+            rl.isKeyReleased(.w) or
+            rl.isKeyReleased(.up);
+
+        if (jumpReleased and self.velocity.y < 0.0) {
+            self.velocity.y *= jumpCutMultiplier;
         }
 
         if (rl.isKeyPressed(.j)) {
