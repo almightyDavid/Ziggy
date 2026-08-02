@@ -35,7 +35,7 @@ pub const Player = struct {
     const knockbackSpeed: f32 = 500.0;
     const knockbackJumpSpeed: f32 = 500;
     const knockbackFriction: f32 = 900.0;
-    const jumpCutMultiplier: f32 = 0.45;
+    const jumpCutMultiplier: f32 = 0.65;
 
     const flickerIntervall: f32 = 0.1;
 
