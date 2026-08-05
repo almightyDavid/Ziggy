@@ -1,5 +1,6 @@
 const rl = @import("raylib");
 const rg = @import("raygui");
+const std = @import("std");
 
 const main_menu = @import("ui/main_menu.zig");
 const game = @import("game/game.zig");
@@ -13,9 +14,15 @@ const WIDTH = definitions.WIDTH;
 const HEIGHT = definitions.HEIGHT;
 
 pub fn main() !void {
+    var debug_allocator: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = debug_allocator.deinit();
+
+    const allocator = debug_allocator.allocator();
+
     rl.setConfigFlags(rl.ConfigFlags{
         .fullscreen_mode = true,
     });
+
     rl.initWindow(WIDTH, HEIGHT, "Ziggy");
     defer rl.closeWindow();
 
@@ -30,22 +37,18 @@ pub fn main() !void {
         .windowHeight = HEIGHT,
     };
 
-    // ---- AUDIO ----
     var audio = try audioManager.init();
     defer audio.deinit();
 
-    // ---
-    //audio.playMusic(.menu);
+    var platformer = try Platformer.init(allocator);
+    defer platformer.deinit();
 
-    var platformer = try Platformer.init();
     while (!rl.windowShouldClose()) {
         if (rl.isKeyPressed(.f11)) {
             rl.toggleBorderlessWindowed();
         }
 
         renderer.beginLogicalDrawing();
-        // ---
-        //audio.update();
 
         switch (app.currentScreen) {
             .mainMenu => main_menu.draw(&app, &audio),
@@ -53,8 +56,8 @@ pub fn main() !void {
                 platformer.update();
                 platformer.draw();
             },
-            .options => break,
-            .quit => break,
+            .options => {},
+            .quit => {},
         }
 
         renderer.endLogicalDrawing();

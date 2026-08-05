@@ -1,7 +1,9 @@
+const std = @import("std");
 const rl = @import("raylib");
 
 const Player = @import("player.zig").Player;
 const Camera = @import("camera.zig").Camera;
+const TiledMap = @import("tiled_map.zig").TiledMap;
 
 const level = @import("level.zig");
 const Assets = @import("../assets.zig").Assets;
@@ -13,18 +15,37 @@ pub const Game = struct {
     player: Player,
     camera: Camera,
     assets: Assets,
+    map: TiledMap,
 
-    pub fn init() !Game {
+    pub fn init(allocator: std.mem.Allocator) !Game {
+        var map = try TiledMap.init(allocator);
+        errdefer map.deinit();
+
+        const assets = try Assets.load();
+        errdefer assets.unload();
+
         var player = Player.init(.{ .x = 80.0, .y = 400.0 });
-        var camera = Camera.init(SCREEN_WIDTH, SCREEN_HEIGHT, level.levelWidth, level.levelHeight, &player);
+        var camera = Camera.init(
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
+            map.width,
+            map.height,
+            &player,
+        );
 
         camera.update(&player);
 
         return .{
             .player = player,
             .camera = camera,
-            .assets = try Assets.load(),
+            .assets = assets,
+            .map = map,
         };
+    }
+
+    pub fn deinit(self: *Game) void {
+        self.map.deinit();
+        self.assets.unload();
     }
 
     pub fn update(self: *Game) void {
@@ -35,18 +56,27 @@ pub const Game = struct {
 
         self.player.update(
             deltaTime,
-            level.platforms[0..],
+            self.map.platforms,
         );
 
-        level.update(deltaTime, &self.player);
+        level.update(
+            deltaTime,
+            &self.player,
+            self.map.platforms,
+        );
 
         for (self.player.projectilesSlice()) |*projectile| {
-            level.resolveProjectileCollision(projectile);
+            level.resolveProjectileCollision(
+                projectile,
+                self.map.platforms,
+                self.map.width,
+            );
         }
 
-        if (self.player.position.y > 1600.0) {
+        if (self.player.position.y > self.map.height + 200.0) {
             self.reset();
         }
+
         self.camera.update(&self.player);
 
         if (!self.player.alive) {
@@ -58,6 +88,7 @@ pub const Game = struct {
         rl.clearBackground(rl.Color.sky_blue);
         rl.beginMode2D(self.camera.camera);
 
+        self.map.draw(&self.assets);
         level.draw(&self.assets);
         self.player.draw(&self.assets);
 
@@ -71,16 +102,23 @@ pub const Game = struct {
             rl.Color.black,
         );
 
-        drawHealth(self);
+        self.drawHealth();
     }
 
     pub fn drawHealth(self: *const Game) void {
         const posX: i32 = 20;
         const posY = SCREEN_HEIGHT - 40;
         const spacing = 40;
+
         var i: i32 = 0;
         while (i < self.player.health) : (i += 1) {
-            rl.drawText("X", posX + i * spacing, posY, 40, rl.Color.red);
+            rl.drawText(
+                "X",
+                posX + i * spacing,
+                posY,
+                40,
+                rl.Color.red,
+            );
         }
     }
 
@@ -89,6 +127,7 @@ pub const Game = struct {
             .x = 80.0,
             .y = 400.0,
         });
+
         level.reset();
     }
 };
